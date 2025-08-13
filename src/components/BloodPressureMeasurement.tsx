@@ -38,26 +38,24 @@ const openDB = (): Promise<IDBDatabase> => {
 };
 
 const addRecord = (record: SavedRecord): Promise<number> => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const db = await openDB();
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            const req = store.add(record);
+    return new Promise((resolve, reject) => {
+        (async () => {
+            try {
+                const db = await openDB();
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.add(record);
 
-            req.onsuccess = () => {
-                resolve(req.result as number);
-            };
-            req.onerror = () => {
-                reject(req.error);
-            };
-        } catch (e) {
-            reject(e);
-        };
+                req.onsuccess = () => resolve(req.result as number);
+                req.onerror = () => reject(req.error);
+            } catch (e) {
+                reject(e);
+            }
+        })();
     });
 };
 
-const validate = (m: Measurement): String | null => {
+const validate = (m: Measurement): string | null => {
     if (
         isNaN(m.systolic) ||
         isNaN(m.diastolic) ||
@@ -210,8 +208,9 @@ export const BloodPressureMeasurement: React.FC = () => {
             setAverage({ ...record, id });
             setSavingStatus('✅ Запис успішно збережено в історію');
             setStage('done');
-        } catch (e: any) {
-            setSavingStatus('❌ Помилка збереження: ' + (e?.message || String(e)));
+        } catch (e: unknown) {
+            const err = e as { message?: string };
+            setSavingStatus('❌ Помилка збереження: ' + (err?.message || String(err)));
         }
     };
 
