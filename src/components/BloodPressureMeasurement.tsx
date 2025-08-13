@@ -111,33 +111,48 @@ export const BloodPressureMeasurement: React.FC = () => {
 
     useEffect(() => {
         if (stage === 'prep-wait') {
+            const endTime = Date.now() + prepTimer * 1000;
+            localStorage.setItem('prep_end_time', endTime.toString());
+
             if (prepInterval.current) window.clearInterval(prepInterval.current);
             prepInterval.current = window.setInterval(() => {
-                setPrepTimer(t => {
-                    if (t <= 1) {
-                        if (prepInterval.current) window.clearInterval(prepInterval.current);
-                        setStage('measuring');
-                        return 0;
-                    };
-                    return t - 1;
-                });
+                const savedEnd = localStorage.getItem('prep_end_time');
+                if (!savedEnd) return;
+
+                const remaining = Math.max(0, Math.ceil((Number(savedEnd) - Date.now()) / 1000));
+                setPrepTimer(remaining);
+
+                if (remaining <= 0) {
+                    if (prepInterval.current) window.clearInterval(prepInterval.current);
+                    setStage('measuring');
+                }
             }, 1000);
+        }
+
+        return () => {
+            if (prepInterval.current) window.clearInterval(prepInterval.current);
         };
     }, [stage]);
 
     useEffect(() => {
         if (cooldown > 0) {
+            const endTime = Date.now() + cooldown * 1000;
+            localStorage.setItem('cooldown_end_time', endTime.toString());
+
             if (cooldownInterval.current) window.clearInterval(cooldownInterval.current);
             cooldownInterval.current = window.setInterval(() => {
-                setCooldown((c) => {
-                    if (c <= 1) {
-                        if (cooldownInterval.current) window.clearInterval(cooldownInterval.current);
-                        return 0;
-                    };
-                    return c - 1;
-                });
+                const savedEnd = localStorage.getItem('cooldown_end_time');
+                if (!savedEnd) return;
+
+                const remaining = Math.max(0, Math.ceil((Number(savedEnd) - Date.now()) / 1000));
+                setCooldown(remaining);
+
+                if (remaining <= 0) {
+                    if (cooldownInterval.current) window.clearInterval(cooldownInterval.current);
+                }
             }, 1000);
-        };
+        }
+
         return () => {
             if (cooldownInterval.current) window.clearInterval(cooldownInterval.current);
         };
