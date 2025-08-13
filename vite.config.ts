@@ -12,7 +12,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'Blood Pressure Measurement',
-        short_name: 'BloodPressureMeasurement',
+        short_name: 'BPM',
         start_url: '/blood-pressure-measurement/',
         display: 'standalone',
         background_color: '#ffffff',
