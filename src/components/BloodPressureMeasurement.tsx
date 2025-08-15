@@ -149,7 +149,8 @@ export const BloodPressureMeasurement: React.FC = () => {
 
                 if (remaining <= 0) {
                     if (cooldownInterval.current) window.clearInterval(cooldownInterval.current);
-                }
+                    setInputs({ systolic: '', diastolic: '', pulse: '' });
+                };
             }, 1000);
         }
 
@@ -168,7 +169,26 @@ export const BloodPressureMeasurement: React.FC = () => {
     };
 
     const handleInputChange = (field: string, value: string) => {
-        setInputs(i => ({ ...i, [field]: value }));
+        setInputs(i => {
+            const updated = { ...i, [field]: value };
+
+            const m: Measurement = {
+                systolic: parseFloat(updated.systolic),
+                diastolic: parseFloat(updated.diastolic),
+                pulse: parseFloat(updated.pulse),
+            };
+
+            if (
+                updated.systolic.trim() &&
+                updated.diastolic.trim() &&
+                updated.pulse.trim() &&
+                !validate(m)
+            ) {
+                setError(null);
+            };
+
+            return updated;
+        });
     };
 
     const handleSaveMeasurement = () => {
@@ -179,15 +199,14 @@ export const BloodPressureMeasurement: React.FC = () => {
             pulse: parseFloat(inputs.pulse),
         };
         const validation = validate(m);
-        
+    
         if (validation) {
             setError('❌ Неправильні значення: ' + validation);
             return;
         };
-        
+    
         setMeasurements(prev => [...prev, m]);
         setSavingStatus(null);
-        setInputs({ systolic: '', diastolic: '', pulse: '' });
 
         if (currentIndex < 2) {
             setCooldown(90);
@@ -199,6 +218,7 @@ export const BloodPressureMeasurement: React.FC = () => {
             return () => clearTimeout(timeout);
         } else {
             computeAndSaveAverage([...measurements, m]);
+            setInputs({ systolic: '', diastolic: '', pulse: '' });
         };
     };
 
@@ -230,7 +250,7 @@ export const BloodPressureMeasurement: React.FC = () => {
     };
 
     return (
-        <div className="max-w-sm mx-auto p-4 bg-white rounded-xl shadow-lg min-h-screen">
+        <div className="max-w-sm mx-auto p-4">
             <h1 className="text-2xl font-bold text-center text-indigo-600 mb-6">
                 Вимірювання тиску
             </h1>
@@ -243,13 +263,13 @@ export const BloodPressureMeasurement: React.FC = () => {
                     <div className="flex flex-col gap-3">
                         <button
                             onClick={handleStartPrep}
-                            className="w-full py-4 rounded-lg bg-green-500 text-white font-semibold shadow hover:bg-green-600 transition text-lg"
+                            className="w-full py-4 rounded-lg bg-green-500 text-white font-semibold shadow cursor-pointer transition-colors duration-300 ease-in-out hover:bg-green-600 text-lg"
                         >
                             ✅ Так
                         </button>
                         <button
                             onClick={handleWaitPrep}
-                            className="w-full py-4 rounded-lg bg-yellow-400 text-white font-semibold shadow hover:bg-yellow-500 transition text-lg"
+                            className="w-full py-4 rounded-lg bg-yellow-400 text-white font-semibold shadow cursor-pointer transition-colors duration-300 ease-in-out hover:bg-yellow-500 text-lg"
                         >
                             ❌ Ні, почати відпочинок
                         </button>
@@ -317,9 +337,14 @@ export const BloodPressureMeasurement: React.FC = () => {
                     )}
 
                     <button
-                        disabled={cooldown > 0}
+                        disabled={
+                            cooldown > 0 ||
+                            !inputs.systolic.trim() ||
+                            !inputs.diastolic.trim() ||
+                            !inputs.pulse.trim()
+                        }
                         onClick={handleSaveMeasurement}
-                        className="w-full bg-indigo-600 text-white font-semibold py-4 rounded-lg shadow hover:bg-indigo-700 disabled:opacity-50 text-lg"
+                        className="w-full bg-indigo-600 text-white font-semibold py-4 rounded-lg shadow cursor-pointer transition-colors duration-300 ease-in-out hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 text-lg"
                     >
                         ✅ Зберегти
                     </button>
